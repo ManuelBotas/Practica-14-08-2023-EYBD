@@ -5,12 +5,6 @@
 #define p printf
 #define s scanf;
 
-typedef struct elemento
-{
-  registro datos;
-  struct elemento *sig;
-} nodo;
-
 typedef struct
 {
   long int cod;
@@ -19,9 +13,22 @@ typedef struct
   float pre;
 } registro;
 
+typedef struct elemento
+{
+  registro datos;
+  struct elemento *sig;
+} nodo;
+
+void Tecla(void);
 int menu(void);
 void cargapila(nodo**,registro[], int);
 void mostrar(FILE*);
+int pilaVacia(nodo*);
+nodo desapilar(nodo**);
+void eliminarPila(nodo**);
+void listarPila(nodo*);
+void apilar(nodo**, nodo*);
+nodo *ingresarDato(int, registro[]);
 
 int main() {
     registro info[] = {
@@ -44,7 +51,39 @@ int main() {
     int op, Cant_Elementos;
     pila_info = NULL;
     pila_infocom = NULL;
+
+    system("color 0a");
+
+    do {
+        op = menu();
+        switch (op) {
+            case 1:
+                Cant_Elementos = sizeof(info) / sizeof(info[0]);
+                cargapila(&pila_info, info, Cant_Elementos);
+                Cant_Elementos = sizeof(infocom) / sizeof(infocom[0]);
+                cargapila(&pila_infocom, infocom, Cant_Elementos);
+                break;
+            case 2:
+                p("WIP\n");
+                break;
+            case 3:
+                p("WIP\n");
+                break;
+            case 4:
+                p("WIP\n");
+                break;
+            case 5:
+                p("WIP\n");
+                break;
+        }
+    } while (op != 5);
     return 0;
+}
+
+void Tecla(void)
+{
+	printf("\nPresione una tecla para continuar...");
+	getch();
 }
 
 int menu(void)
@@ -71,9 +110,9 @@ void cargapila(nodo**x,registro y[], int z)
     nodo *q;
     for(i=0;i<z;i++)
     {
-          q=ingresarDato(i,y);
-          apilar(&(*x),q);
-     }
+        q=ingresarDato(i,y);
+        apilar(&(*x),q);
+    }
 }
 
 void mostrar(FILE*x)
@@ -133,4 +172,19 @@ void listarPila(nodo *pl)
     }
     printf("\n\n");
     system("pause");
+}
+
+void apilar(nodo **pl, nodo *d)
+{
+    d->sig = *pl;
+    *pl = d;
+}
+
+nodo *ingresarDato(int i, registro y[])
+{
+    nodo *q;
+    q = (nodo*)malloc(sizeof(nodo));
+    q->datos = y[i];
+    q->sig = NULL;
+    return q;
 }
