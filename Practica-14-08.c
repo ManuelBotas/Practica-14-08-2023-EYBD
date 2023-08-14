@@ -29,6 +29,8 @@ void eliminarPila(nodo**);
 void listarPila(nodo*);
 void apilar(nodo**, nodo*);
 nodo *ingresarDato(int, registro[]);
+void actualizarPila(nodo**, nodo**);
+nodo *IngresarNodo(nodo);
 
 int main() {
     registro info[] = {
@@ -48,6 +50,7 @@ int main() {
     };
 
     nodo *pila_info, *pila_infocom;
+    FILE *f;
     int op, Cant_Elementos;
     pila_info = NULL;
     pila_infocom = NULL;
@@ -62,21 +65,45 @@ int main() {
                 cargapila(&pila_info, info, Cant_Elementos);
                 Cant_Elementos = sizeof(infocom) / sizeof(infocom[0]);
                 cargapila(&pila_infocom, infocom, Cant_Elementos);
+                p("DATOS CARGADOS\n");
+                Tecla();
                 break;
             case 2:
-                p("WIP\n");
+                actualizarPila(&pila_info, &pila_infocom);
                 break;
             case 3:
-                p("WIP\n");
+                if (pilaVacia(pila_info))
+                    listarPila(pila_info);
                 break;
             case 4:
-                p("WIP\n");
+                f = fopen("productos.dat", "wb+");
+                if (f == NULL)
+                {
+                    p("ERROR AL ABRIR EL ARCHIVO\n");
+                    Tecla();
+                    break;
+                }
+                nodo *aux;
+                aux = pila_info;
+                while (aux)
+                {
+                    fwrite(&aux->datos, sizeof(aux->datos), 1, f);
+                    aux = aux->sig;
+                }
+                p("ARCHIVO CARGADO\n");
+                Tecla();
+                mostrar(f);
+                Tecla();
+                fclose(f);
                 break;
             case 5:
-                p("WIP\n");
+                eliminarPila(&pila_info);
+                eliminarPila(&pila_infocom);
+                p("PILAS ELIMINADAS\n");
+                Tecla();
                 break;
         }
-    } while (op != 5);
+    } while (op < 5);
     return 0;
 }
 
@@ -93,12 +120,12 @@ int menu(void)
   {
     system("cls");
     printf("\n\t\t\t\t MENU DE OPCIONES (PILAS)\n\n");
-    printf("\n\n\t\t\t\t - CARGAR DATOS INICIALES     <1>\n");
-    printf("\n\n\t\t\t\t - AGREGAR DATOS                      <2>\n");
-    printf("\n\n\t\t\t\t - LISTAR DATOS                         <3>\n");
-    printf("\n\n\t\t\t\t - CARGAR EN ARCHIVO               <4>\n");
-    printf("\n\n\t\t\t\t - BORRAR Y SALIR                       <5>\n");
-    printf("\n\n\t\t\t\t - INGRESE OPCION  [1-5]:  ");
+    printf("\n\t\t\t\t - CARGAR DATOS INICIALES     <1>\n");
+    printf("\n\t\t\t\t - AGREGAR DATOS                      <2>\n");
+    printf("\n\t\t\t\t - LISTAR DATOS                         <3>\n");
+    printf("\n\t\t\t\t - CARGAR EN ARCHIVO               <4>\n");
+    printf("\n\t\t\t\t - BORRAR Y SALIR                       <5>\n");
+    printf("\n\t\t\t\t - INGRESE OPCION  [1-5]:  ");
     scanf("%d", &op);
   } while (op < 1 || op > 5);
   return op;
@@ -118,13 +145,13 @@ void cargapila(nodo**x,registro y[], int z)
 void mostrar(FILE*x)
 {
    registro r;
-    p("\n\t\t CONTENIDO DE LOS REGISTROS EN EL ARCHIVO\n\n");
-    p("\n\n Codigo\t\tNombre\t\t\tCantidad\t\tPrecio\n\n");
+    p("\n\n\t\t CONTENIDO DE LOS REGISTROS EN EL ARCHIVO\n");
+    p("\n Codigo\t\tNombre\t\t\tCantidad\t\tPrecio\n\n");
     rewind(x);
     fread(&r,sizeof(r),1,x);
 	while(!feof(x))
 	{
-		p("\n\n%3d\t\t%-20s\t%6d\t\t\t%6.2f",r.cod,r.desc,r.cant,r.pre);
+		p("\n%3d\t\t%-20s\t%6d\t\t\t%6.2f",r.cod,r.desc,r.cant,r.pre);
 		fread(&r,sizeof(r),1,x);
 	}
 }
@@ -134,13 +161,14 @@ int pilaVacia(nodo *pl)
     if (pl == NULL)
     {
         printf("\n\nPILA VACIA\n\n");
-        system("pause");
+        Tecla();
  
         return 0;
     }
     else
         return 1;
 }
+
 nodo desapilar(nodo **pl)
 {
     nodo dato, *aux;
@@ -171,7 +199,7 @@ void listarPila(nodo *pl)
         pl = pl->sig;
     }
     printf("\n\n");
-    system("pause");
+    Tecla();
 }
 
 void apilar(nodo **pl, nodo *d)
@@ -185,6 +213,47 @@ nodo *ingresarDato(int i, registro y[])
     nodo *q;
     q = (nodo*)malloc(sizeof(nodo));
     q->datos = y[i];
+    q->sig = NULL;
+    return q;
+}
+
+void actualizarPila(nodo **p_sto, nodo **p_com)
+{
+    nodo *aux = NULL;
+    nodo *stock, *compra;
+    while (*p_com != NULL)
+    {
+        compra = IngresarNodo(desapilar(p_com));
+        int flag = 0;
+        while (*p_sto != NULL)
+        {
+            stock = IngresarNodo(desapilar(p_sto));
+            if (compra->datos.cod == stock->datos.cod)
+            {
+                stock->datos.cant += compra->datos.cant;
+                flag = 1;
+            }
+            apilar(&aux, stock);
+        }
+        if (flag == 0)
+        {
+            apilar(&aux, compra);
+        }
+        while (aux)
+        {
+            stock = IngresarNodo(desapilar(&aux));
+            apilar(&(*p_sto), stock);
+        }
+    }
+    p("DATOS ACTUALIZADOS\n");
+    Tecla();
+}
+
+nodo *IngresarNodo(nodo aux)
+{
+    nodo *q;
+    q = (nodo*)malloc(sizeof(nodo));
+    q->datos = aux.datos;
     q->sig = NULL;
     return q;
 }
